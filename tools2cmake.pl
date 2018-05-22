@@ -15,6 +15,7 @@ foreach my $tool (keys %{$cc->{SETUP}})
   my $uc=uc($tool); $uc=~s/-/_/g;
   my $r;
   open($r,">${tools}/Find${uc}.cmake");
+  open($p,">${tools}/FindLIB_${uc}.cmake");
   print $r "  mark_as_advanced(${uc}_FOUND)\n";
   print $r "  set(${uc}_FOUND TRUE)\n";
   if (exists $cc->{SETUP}{$tool}{USE})
@@ -33,7 +34,8 @@ foreach my $tool (keys %{$cc->{SETUP}})
   if (exists $cc->{SETUP}{$tool}{"${uc}_BASE"})
   {
     $base=$cc->{SETUP}{$tool}{"${uc}_BASE"};
-    print $r "  set(${uc}_ROOT \$\{BASE\}$base)\n";
+    print $r "  set(${uc}_ROOT $base)\n";
+    print $p "set(${uc}_ROOT base)\n";
   }
   if ($cc->{SETUP}{$tool}{INCLUDE})
   {
@@ -54,6 +56,7 @@ foreach my $tool (keys %{$cc->{SETUP}})
       {
         if($base){$d=~s/$base\//\${${uc}_ROOT}\//;}
         print $r "  set(LIBRARY_DIRS $d \${LIBRARY_DIRS})\n";
+        print $p "set(LIBRARY_DIRS $d \${LIBRARY_DIRS})\n";
       }
     }
   }
@@ -61,7 +64,12 @@ foreach my $tool (keys %{$cc->{SETUP}})
   {
     foreach my $lib (@{$cc->{SETUP}{$tool}{LIB}})
     {
-    if ($lib ne ""){print $r "  cms_find_library(${uc} ${lib})\n";}
+      if ($lib ne "")
+      {
+        print $r "  cms_find_library(${uc} ${lib})\n";
+        print $p "find_library(${uc}_LIB_${lib} ${lib} HINTS \${LIBRARY_DIRS} \$ENV{LD_LIBRARY_PATH}  \${CMAKE_SOURCE_DIR}/../external/\${SCRAM_ARCH}/lib NO_CMAKE_SYSTEM_PATH NO_SYSTEM_ENVIRONMENT_PATH)\n";
+        print $p "unset(LIBRARY_DIRS)\n";
+      }
     }
   }
   if ($cc->{SETUP}{$tool}{FLAGS})
@@ -103,5 +111,6 @@ foreach my $tool (keys %{$cc->{SETUP}})
     }
   }
   close($r);
+  close($p);
 }
 

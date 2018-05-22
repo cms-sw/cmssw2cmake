@@ -16,11 +16,14 @@ my $tools="${proj_cmake}/tools";
 my $prods="${base}/.SCRAM/${arch}/ProjectCache.db.gz";
 chdir($base);
 system("rm -rf $proj_modules $tools; mkdir -p $proj_modules");
+system("${SCRIPT_DIR}/runtime2cmake.pl $proj_modules");
 if ($proj eq "")
 {
   print "Generating tools...\n";
   system("${SCRIPT_DIR}/tools2cmake.pl $tools");
-  system("${SCRIPT_DIR}/runtime2cmake.pl $proj_modules");
+}
+if ( -e "${base}/config/toolbox/${arch}/tools/selected/coral.xml")
+{
   my $coral=`scram tool tag coral CORAL_BASE`; chomp $coral;
   my $ver=$coral; $ver=~s/.*\///;
   print "Generating Coral $ver ....\n";
@@ -288,8 +291,8 @@ sub dump_cmake_module()
   }
   if ($type ne "INTERFACE")
   {
-    print $r "set(LIBRARY_DIRS \$<TARGET_FILE_DIR:${name}> \${LIBRARY_DIRS})\n";
-    print $r "set(PATH \$<TARGET_FILE_DIR:${name}>  \${PATH})\n";
+    print $r "set(LIBRARY_DIRS \${CMAKE_BINARY_DIR}/lib \${LIBRARY_DIRS})\n";
+    print $r "set(PATH \${CMAKE_BINARY_DIR}/bin  \${PATH})\n";
   }
   close($r);
 }
